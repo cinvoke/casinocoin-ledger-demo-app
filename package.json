@@ -1,16 +1,18 @@
 {
   "private": true,
-  "name": "casinocoin-ledger-electron-hid",
+  "name": "casinocoin-ledger-demo-app",
   "version": "1.0.0",
-  "description": "A CasinoCoin Ledger App",
+  "description": "CasinoCoin Ledger Demo App",
   "main": "main.js",
   "scripts": {
     "start": "electron .",
-    "postinstall": "electron-rebuild",
+    "postinstall:electron": "node postinstall",
     "pack": "build --dir",
-    "dist": "build"
+    "dist": "build",
+    "electron:windows": "electron-builder build --windows",
+    "electron:mac": "electron-builder build --mac"
   },
-  "repository": "https://github.com/sarathkaleswaram/ledger-live-electron-hid",
+  "repository": "https://github.com/casinocoin/casinocoin-ledger-demo-app",
   "keywords": [
     "Electron",
     "CasinoCoin",
@@ -18,7 +20,7 @@
     "Ledger"
   ],
   "build": {
-    "appId": "org.casinocoin-ledger.com",
+    "appId": "org.casinocoin.ledger.demo",
     "linux": {
       "target": [
         "AppImage",
@@ -36,15 +38,15 @@
   },
   "license": "CC0-1.0",
   "devDependencies": {
-    "electron": "^4.0.3",
-    "electron-builder": "^20.44.4",
-    "electron-rebuild": "^1.8.4"
+    "electron": "^8.0.3",
+    "electron-builder": "^22.3.6",
+    "electron-rebuild": "^1.10.0"
   },
   "dependencies": {
-    "@ledgerhq/hw-transport-node-hid": "^4.38.6",
+    "@casinocoin/ledger": "^0.1.1",
+    "@casinocoin/libjs": "^2.0.14",
+    "@ledgerhq/hw-transport-node-hid": "^5.8.0",
     "babel-polyfill": "^6.26.0",
-    "casinocoin-libjs": "^1.0.12",
-    "hw-app-csc": "2.0.0",
     "jsonschema": "^1.2.2"
   },
   "resolutions": {

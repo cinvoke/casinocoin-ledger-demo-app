@@ -1,32 +1,70 @@
 require("babel-polyfill");
 const TransportNodeHid = require("@ledgerhq/hw-transport-node-hid").default;
-const CSC = require("hw-app-csc").default;
+const CSC = require("@casinocoin/ledger").default;
+const { listen } = require("@ledgerhq/logs");
 
 var binary = require('casinocoin-libjs-binary-codec');
-var CasinocoinAPI = require('casinocoin-libjs').CasinocoinAPI;
+var CasinocoinAPI = require('@casinocoin/libjs').CasinocoinAPI;
 var csc_server = "wss://ws01.casinocoin.org:4443";
 var feeCSC = '';
+
+// Keep a global reference of the window object, if you don't, the window will
+// be closed automatically when the JavaScript object is garbage collected.
+let mainWindow;
+
+function weblog(logmsg) {
+  if(mainWindow) {
+    mainWindow.webContents.send("log", logmsg);
+  }
+}
+
+listen(log => weblog(log.type + ": " + log.message));
+
+class EventObserver {
+  constructor() {
+  this.observers = [];
+  }
+  next(eventText) {
+    if(eventText.type === 'remove') {
+      weblog('Device Disconnected !!!');
+      if(mainWindow){
+        mainWindow.webContents.send("disconnected");
+        mainWindow.webContents.send("message", "Ledger Device Disconnected");
+      }
+    } else if( eventText.type === 'add') {
+      weblog('Device Connected !!!');
+      if(mainWindow){
+        mainWindow.webContents.send("message", "Ledger Device Connected");
+        getCasinoCoinInfo().then(result => {
+          mainWindow.webContents.send("casinocoinInfo", result);
+        });
+      }
+    }
+  }
+}
+const observer = new EventObserver();
+TransportNodeHid.listen(observer);
 
 let api = new CasinocoinAPI({
   server: csc_server
 });
 
 api.connect().then(() => {
-  console.log('CasinoCoin Connected');
+  weblog('CasinoCoin Connected');
+  mainWindow.webContents.send("message", "CasinoCoin Network Connected");
   api.getServerInfo().then(info => {
     feeCSC = info.validatedLedger.baseFeeCSC;
   });
-})
-  .catch(e => console.error(e));
+}).catch(e => weblog('Error: ' + e));
 
 const { app, BrowserWindow, ipcMain } = require("electron");
 
-function getCasinoCoinInfo(verify) {
+function getCasinoCoinInfo() {
   return TransportNodeHid.open("")
     .then(transport => {
-      transport.setDebugMode(true);
       const csc = new CSC(transport);
-      return csc.getAddress("44'/144'/0'/0/0", verify).then(r =>
+      weblog('### Get Address from ledger');
+      return csc.getAddress("44'/144'/0'/0/0", false).then(r =>
         transport
           .close()
           .catch(e => { })
@@ -38,14 +76,9 @@ function getCasinoCoinInfo(verify) {
             return r;
           })
       );
-    })
-    .catch(e => {
-      console.warn(e);
-      // try again until success!
-      return new Promise(s => setTimeout(s, 1000)).then(() =>
-        getCasinoCoinInfo(verify)
-      );
-    });
+    }).catch(e => {
+      weblog('getCasinoCoinInfo error: ' + e);
+    });;
 }
 
 function updateBalance(address) {
@@ -59,8 +92,6 @@ function updateBalance(address) {
 function getCasinoCoinSignTransaction(destination_address, destination_tag, amount) {
   TransportNodeHid.open("")
     .then(transport => {
-
-      transport.setDebugMode(true);
       const csc = new CSC(transport);
 
       const instructions = {
@@ -68,35 +99,35 @@ function getCasinoCoinSignTransaction(destination_address, destination_tag, amou
         fee: feeCSC
       };
 
-      destination_address = destination_address ? destination_address : 'cHb9CJAWyB4cj91VRWn96DkukG4bwdtyTh';
-      amount = amount ? amount : "1";
-
       csc.getAddress("44'/144'/0'/0/0").then(address => {
-        console.log('Source: ', address.address);
-        console.log('Destination: ', destination_address);
-        console.log('Amount: ', amount);
+        weblog('Source: ' + address.address);
+        weblog('Destination: ' + destination_address);
+        weblog('Amount: ' + amount);
+        weblog('Destination Tag: ' + destination_tag);
 
         var source_address = address.address;
+
         let payment = {
           source: {
             address: source_address,
             maxAmount: {
-              value: '10',
+              value: amount,
               currency: 'CSC'
             }
           },
           destination: {
             address: destination_address,
             amount: {
-              currency: "CSC",
-              value: amount
+              value: amount,
+              currency: 'CSC'
             }
           }
         };
 
         if (destination_tag) {
-          payment.destination.tag = destination_tag;
+          payment.destination.tag = Number(destination_tag);
         }
+        weblog('Prepare Payment: ' + payment);
 
         api.preparePayment(source_address, payment, instructions).then(prepared => {
           const json = JSON.parse(prepared.txJSON);
@@ -109,12 +140,12 @@ function getCasinoCoinSignTransaction(destination_address, destination_tag, amou
             const txHEX = binary.encode(txJSON);
 
             api.submit(txHEX).then(info => {
-              console.error(info);
+              weblog('Error: ' + info);
               // return api.disconnect();
-            }).catch(e => console.error(e));
+            }).catch(e => weblog('Submit Error: ' + e));
 
-          }).catch(e => console.error(e));
-        }).catch(e => console.error(e));
+          }).catch(e => weblog('Sign Error: ' + e));
+        }).catch(e => weblog('Prepare Error: ' + e));
       });
     });
 }
@@ -131,24 +162,20 @@ function redirectToExplorer(address) {
   });
 }
 
-// Keep a global reference of the window object, if you don't, the window will
-// be closed automatically when the JavaScript object is garbage collected.
-let mainWindow;
-
 function createWindow() {
   // Create the browser window.
-  mainWindow = new BrowserWindow({ width: 800, height: 600 });
+  mainWindow = new BrowserWindow({ width: 800, height: 650, webPreferences: {nodeIntegration: true}});
   // and load the index.html of the app.
   mainWindow.loadFile("index.html");
   // Open the DevTools.
-  // mainWindow.webContents.openDevTools();
+  mainWindow.webContents.openDevTools();
   // Emitted when the window is closed.
   mainWindow.on("closed", function () {
     mainWindow = null;
   });
 
   ipcMain.on("requestCasinoCoinInfo", () => {
-    getCasinoCoinInfo(false).then(result => {
+    getCasinoCoinInfo().then(result => {
       mainWindow.webContents.send("casinocoinInfo", result);
     });
   });
@@ -161,9 +188,6 @@ function createWindow() {
     redirectToExplorer(arg);
   });
 
-  ipcMain.on("verifyCasinoCoinInfo", () => {
-    getCasinoCoinInfo(true);
-  });
 }
 
 
