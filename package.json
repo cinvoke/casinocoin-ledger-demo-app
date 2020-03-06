@@ -10,7 +10,10 @@
     "pack": "build --dir",
     "dist": "build",
     "electron:windows": "npm run postinstall && electron-builder build --windows",
-    "electron:mac": "npm run postinstall && electron-builder build --mac"
+    "electron:mac": "npm run postinstall && electron-builder build --mac",
+    "electron:linux": "npm run postinstall && electron-builder build --linux",
+    "electron:all": "npm run electron:windows && npm run electron:mac && npm run electron:linux",
+    "publish": "npm run postinstall && electron-builder build --mac --win --linux -p always"
   },
   "repository": "https://github.com/casinocoin/casinocoin-ledger-demo-app",
   "keywords": [

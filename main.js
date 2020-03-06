@@ -8,6 +8,8 @@ var CasinocoinAPI = require('@casinocoin/libjs').CasinocoinAPI;
 var csc_server = "wss://ws01.casinocoin.org:4443";
 var feeCSC = '';
 
+var transactionSubmitted = false;
+
 // Keep a global reference of the window object, if you don't, the window will
 // be closed automatically when the JavaScript object is garbage collected.
 let mainWindow;
@@ -83,7 +85,13 @@ function getCasinoCoinInfo() {
 
 function updateBalance(address) {
   api.getAccountInfo(address.address).then(info => {
+    weblog('updateBalance - accountInfo: ' + JSON.stringify(info));
     mainWindow.webContents.send("updateBalance", info.cscBalance);
+    if(transactionSubmitted === true){
+      transactionSubmitted = false;
+      mainWindow.webContents.send("message", "TX: " + info.previousAffectingTransactionID);
+      mainWindow.webContents.send("closeModal");
+    }
   }).catch(e => {
     mainWindow.webContents.send("updateBalance", "0");
   });
@@ -140,7 +148,13 @@ function getCasinoCoinSignTransaction(destination_address, destination_tag, amou
             const txHEX = binary.encode(txJSON);
 
             api.submit(txHEX).then(info => {
-              weblog('Error: ' + info);
+              weblog('Submit Result: ' + JSON.stringify(info));
+              if(info.resultCode == 'tesSUCCESS'){
+                // wait to set transactionSubmitted so the ledger will be validated
+                setTimeout(function() {              
+                  transactionSubmitted = true;
+                }, 3000);
+              }
               // return api.disconnect();
             }).catch(e => weblog('Submit Error: ' + e));
 
@@ -164,7 +178,7 @@ function redirectToExplorer(address) {
 
 function createWindow() {
   // Create the browser window.
-  mainWindow = new BrowserWindow({ width: 800, height: 650, webPreferences: {nodeIntegration: true}});
+  mainWindow = new BrowserWindow({ width: 850, height: 650, webPreferences: {nodeIntegration: true}});
   // and load the index.html of the app.
   mainWindow.loadFile("index.html");
   // Open the DevTools.
