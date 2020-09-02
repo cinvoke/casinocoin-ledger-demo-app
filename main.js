@@ -38,7 +38,7 @@ class EventObserver {
             weblog('Device Connected.');
             if (mainWindow) {
                 mainWindow.webContents.send("message", "Ledger Device Connected");
-                getCasinoCoinInfo().then(result => {
+                getAccount().then(result => {
                     mainWindow.webContents.send("casinocoinInfo", result);
                 });
             }
@@ -63,36 +63,49 @@ api.connect().then(() => {
 
 const {app, BrowserWindow, ipcMain} = require("electron");
 
-function getCasinoCoinInfo(verify) {
+function getAccount() {
     return TransportNodeHid.open("")
         .then(transport => {
             const csc = new CSC(transport);
             weblog('### Get Address from ledger');
-            return csc.getAddress("44'/144'/0'/0/0", verify).then(r =>
+            return csc.getAddress("44'/144'/0'/0/0").then(r =>
+                transport.close().catch(e => {})
+                    .then(() => {
+                        return r;
+                    })
+            );
+        }).catch(e => {
+            //@toDo: maybe try again here?
+            weblog('getCasinoCoinInfo error: ' + e);
+        });
+}
+
+function verifyAccount() {
+    return TransportNodeHid.open("")
+        .then(transport => {
+            const csc = new CSC(transport);
+            weblog('### Get Address from ledger');
+            //pass true to toggle verifying the address on the device
+            return csc.getAddress("44'/144'/0'/0/0", true).then(r =>
                 transport
                     .close()
                     .catch(e => {})
                     .then(() => {
-                        if (verify) {
                             mainWindow.webContents.send("toggleEntryToMain", "0");
                             updateBalance(r);
                             setInterval(function () {
                                 updateBalance(r);
-                            }, 15000);
-                        }
+                            }, 5000);
                         return r;
                     })
             );
         }).catch(e => {
             weblog('getCasinoCoinInfo error: ' + e);
             //exit the app if the user clicks X during the address verify step
-            if (verify) {
-                if (process.platform !== "darwin") {
-                    app.quit();
-                }
+            if (process.platform !== "darwin") {
+                app.quit();
             }
         });
-    ;
 }
 
 function updateBalance(address) {
@@ -207,7 +220,7 @@ function createWindow() {
     });
 
     ipcMain.on("requestCasinoCoinInfo", () => {
-        getCasinoCoinInfo(false).then(result => {
+        getAccount().then(result => {
             console.log('request from main');
             mainWindow.webContents.send("casinocoinInfo", result);
         });
@@ -223,7 +236,9 @@ function createWindow() {
 
     ipcMain.on("verifyCSCAddress", () => {
         //pass in true to initiate the verify step on the ledger device.
-        getCasinoCoinInfo(true);
+        verifyAccount().then(r => {
+            console.log(r);
+        });
     });
 }
 //when the app is ready call the initial createWindow method.

@@ -56,6 +56,7 @@ ipcRenderer.on("casinocoinInfo", (event, arg) => {
     console.log('ran');
     if (arg !== undefined && arg !== null) {
         //send off the verify address request to the ledger
+        console.log('-called-');
         ipcRenderer.send("verifyCSCAddress");
         //set the entry screen (user verifies the address displayed on their device to arg.address)
         setEntryScreen(arg.address);
