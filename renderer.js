@@ -43,16 +43,16 @@ ipcRenderer.on("casinocoinInfo", (event, arg) => {
         balance.textContent = "Balance: 0 CSC";
         submit.innerHTML = 'Submit Transaction';
         submit.onclick = function () {
-            let address = document.getElementById('address').value;
-            let destinationTag = document.getElementById('destinationTag').value;
-            let amount = document.getElementById('amount').value;
-            if (!address || !amount) {
+            let addressHold = document.getElementById('address').value;
+            let destinationTagHold = document.getElementById('destinationTag').value;
+            let amountHold = document.getElementById('amount').value;
+            if (!addressHold || !amountHold) {
                 failTxModal.style.display = "block";
             } else {
-                document.getElementById('address').value = '';
-                document.getElementById('amount').value = '';
-                document.getElementById('destinationTag').value = '';
-                ipcRenderer.send("requestCasinoCoinSignTransaction", [address, destinationTag, amount]);
+                address.value = '';
+                amount.value = '';
+                destinationTag.value = '';
+                ipcRenderer.send("requestCasinoCoinSignTransaction", [addressHold, destinationTagHold, amountHold]);
                 // show the modal
                 modal.style.display = "block";
             }
