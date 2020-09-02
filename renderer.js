@@ -15,6 +15,7 @@ function renderMainPage() {
 //  7.  TrustSet for Token page
 //
 
+// Setup hooks to various html elements since we don't have a framework.
 const balance = document.getElementById("balance");
 const addressDisplay = document.getElementById("address-display");
 const address = document.getElementById('address');
@@ -28,30 +29,38 @@ const transactions = document.getElementById('transactions');
 const entryAddress = document.getElementById('entry-address');
 const entryMsg = document.getElementById('entry-msg');
 const navWrapper = document.getElementById('nav-wrapper');
-let verified = false;
+const modal = document.getElementById("ledgerModal");
+const failTxModal = document.getElementById("failTxModal");
+const failTxModalClose = document.getElementsByClassName("close-tx")[0];
+const span = document.getElementsByClassName("close-confirm")[0];
+
+span.onclick = function () {
+    modal.style.display = "none";
+}
+failTxModalClose.onclick = function () {
+    failTxModal.style.display = "none";
+}
+
+function setEntryScreen(address) {
+    entryAddress.innerHTML = address;
+    entryMsg.innerHTML = 'Please verify the Address on your Ledger device to continue.';
+}
+
+function setMainScreen(address) {
+    addressDisplay.textContent = address;
+    balance.textContent = "Balance: 0 CSC";
+    submit.innerHTML = 'Submit Transaction';
+}
+
 ipcRenderer.on("casinocoinInfo", (event, arg) => {
     console.log('ran');
     if (arg !== undefined && arg !== null) {
-        entryAddress.innerHTML = arg.address;
-        entryMsg.innerHTML = 'Please verify the Address on your Ledger device to continue.';
+        //send off the verify address request to the ledger
         ipcRenderer.send("verifyCSCAddress");
-        // Get the modal
-        const modal = document.getElementById("ledgerModal");
-        const failTxModal = document.getElementById("failTxModal");
-        const failTxModalClose = document.getElementsByClassName("close-tx")[0];
-        // Get the <span> element that closes the modal
-        const span = document.getElementsByClassName("close-confirm")[0];
-        // When the user clicks on <span> (x), close the modal
-        span.onclick = function () {
-            modal.style.display = "none";
-        }
-        failTxModalClose.onclick = function () {
-            failTxModal.style.display = "none";
-        }
+        //set the entry screen (user verifies the address displayed on their device to arg.address)
+        setEntryScreen(arg.address);
+        setMainScreen(arg.address);
 
-        addressDisplay.textContent = arg.address;
-        balance.textContent = "Balance: 0 CSC";
-        submit.innerHTML = 'Submit Transaction';
         submit.onclick = function () {
             let addressHold = document.getElementById('address').value;
             let destinationTagHold = document.getElementById('destinationTag').value;
@@ -81,6 +90,12 @@ ipcRenderer.on("toggleEntryToMain", (event, arg) => {
     entry.style.display = "none";
     main.style.display = "flex";
     navWrapper.style.display = "block";
+});
+
+ipcRenderer.on("toggleEntryToTokens", (event, arg) => {
+    tokens.style.display = "block";
+    main.style.display = "none";
+    transactions.style.display = "none";
 });
 
 ipcRenderer.on("disconnected", (event, arg) => {
