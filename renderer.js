@@ -6,7 +6,6 @@ function renderMainPage() {
 }
 
 // @toDo: not in order read all first
-//  1.  Hook menu items for clicks
 //  2.  Figure out on startup if tokens exist (getBalances)
 //  3.  On startup check if the account is not yet activated ^^^^
 //  4.  For the tx page use the getTransactions call
@@ -16,7 +15,7 @@ function renderMainPage() {
 //
 
 // Setup hooks to various html elements since we don't have a framework.
-const balance = document.getElementById("balance");
+const balance = document.getElementById("balance-csc");
 const addressDisplay = document.getElementById("address-display");
 const address = document.getElementById('address');
 const destinationTag = document.getElementById('destinationTag');
@@ -33,6 +32,35 @@ const failTxModal = document.getElementById("failTxModal");
 const failTxModalClose = document.getElementsByClassName("close-tx")[0];
 const modal = document.getElementById("ledgerModal");
 const ledgerModalClose = document.getElementsByClassName("close-confirm")[0];
+const navMain = document.getElementById('nav-main');
+const navToken = document.getElementById('nav-tokens');
+const navTransactions = document.getElementById('nav-transactions');
+
+//nav click functions
+navMain.onclick = function() {
+    transactions.style.display = "none";
+    tokens.style.display = "none";
+    main.style.display = "block";
+    this.classList.add('active');
+    navToken.classList.remove('active');
+    navTransactions.classList.remove('active');
+}
+navToken.onclick = function () {
+    main.style.display = "none";
+    transactions.style.display = "none";
+    tokens.style.display = "block";
+    this.classList.add('active');
+    navMain.classList.remove('active');
+    navTransactions.classList.remove('active');
+}
+navTransactions.onclick = function() {
+    main.style.display = "none";
+    tokens.style.display = "none";
+    transactions.style.display = "block";
+    this.classList.add('active');
+    navMain.classList.remove('active');
+    navToken.classList.remove('active');
+}
 
 ledgerModalClose.onclick = function () {
     modal.style.display = "none";
@@ -48,14 +76,13 @@ function setEntryScreen(address) {
 
 function setMainScreen(address) {
     addressDisplay.textContent = address;
-    balance.textContent = "Balance: 0 CSC";
+    balance.textContent = "0 CSC";
     submit.innerHTML = 'Submit Transaction';
 }
 
 ipcRenderer.on("casinocoinInfo", (event, arg) => {
     if (arg !== undefined && arg !== null) {
         //send off the verify address request to the ledger
-        console.log('-called-');
         ipcRenderer.send("verifyCSCAddress");
         //set the entry screen (user verifies the address displayed on their device to arg.address)
         setEntryScreen(arg.address);
@@ -81,12 +108,12 @@ ipcRenderer.on("casinocoinInfo", (event, arg) => {
 });
 
 ipcRenderer.on("updateBalance", (event, arg) => {
-    balance.textContent = "Balance: " + arg + " CSC";
+    balance.textContent = arg + " CSC";
 });
 
 ipcRenderer.on("toggleEntryToMain", (event, arg) => {
     entry.style.display = "none";
-    main.style.display = "flex";
+    main.style.display = "block";
     navWrapper.style.display = "block";
 });
 

@@ -27,7 +27,6 @@ class EventObserver {
         this.observers = [];
     }
     next(eventText) {
-        console.log('eventObserver');
         if (eventText.type === 'remove') {
             weblog('Device Disconnected.');
             if (mainWindow) {
@@ -110,13 +109,13 @@ function verifyAccount() {
 
 function updateBalance(address) {
     api.getBalances(address.address).then(info => {
-        console.log(info);
+        //console.log(info);
     }).catch(e => {
         mainWindow.webContents.send("updateBalance", "0");
     });
     api.getAccountInfo(address.address).then(info => {
-        console.log(info);
-        weblog('updateBalance - accountInfo: ' + JSON.stringify(info));
+        //console.log(info);
+        //weblog('updateBalance - accountInfo: ' + JSON.stringify(info));
         mainWindow.webContents.send("updateBalance", info.cscBalance);
         if (transactionSubmitted === true) {
             transactionSubmitted = false;
@@ -212,8 +211,6 @@ function createWindow() {
     mainWindow = new BrowserWindow({width: 850, height: 650, webPreferences: {nodeIntegration: true}});
     // and load the index.html of the app.
     mainWindow.loadFile("index.html");
-    // Open the DevTools.
-    // mainWindow.webContents.openDevTools();
     // Emitted when the window is closed.
     mainWindow.on("closed", function () {
         mainWindow = null;

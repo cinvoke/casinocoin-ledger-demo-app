@@ -9,12 +9,8 @@
             font-family: sans-serif;
         }
         #main, #entry {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            height: 90vh;
             font-family: sans-serif;
+            padding: 50px;
         }
         #entry {
             text-align: center;
@@ -39,7 +35,7 @@
             display: block;
         }
         input {
-            width: 60%;
+            width: 100%;
             padding: 12px 20px;
             margin: 8px 0;
             display: inline-block;
@@ -48,11 +44,11 @@
             box-sizing: border-box;
         }
         button {
-            width: 50%;
+            width: 90%;
             background-color: #bf0a0a;
             color: white;
             padding: 14px 20px;
-            margin: 8px 0;
+            margin: 8px auto;
             border: none;
             border-radius: 4px;
             cursor: pointer;
@@ -124,6 +120,30 @@
         #main, #tokens, #transactions, #nav-wrapper {
             display: none;
         }
+        .boxes {
+            overflow: auto;
+            display: flex;
+            flex-flow: row wrap;
+            width: 100%;
+            word-wrap: break-word;
+        }
+        .box {
+            flex: auto;
+            border: 1px solid #eee;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 10px;
+        }
+        .submit-tx-box {
+            width: 100%;
+            text-align: center;
+        }
+        .address-box, .balance-box {
+            max-width: 50%;
+        }
+        .margin-right {
+            margin-right: 10px;
+        }
     </style>
 </head>
 <body>
@@ -139,14 +159,23 @@
     <h4 id="entry-address"></h4>
 </div>
 <div id="main">
-    <h1 id="message-top">Ledger CasinoCoin Address</h1>
-    <h4 id="address-display"></h4>
-    <h4 id="balance"></h4>
-    <br><br>
-    <input type="text" id="address" placeholder="Destination Address">
-    <input type="number" id="destinationTag" placeholder="Destination Tag">
-    <input type="text" id="amount" placeholder="Amount">
-    <button id="submit-tx-btn">Submit Transaction</button>
+    <div class="boxes">
+        <div class="box address-box margin-right">
+            <h3 id="message-top">Ledger CasinoCoin Address</h3>
+            <h4 id="address-display"></h4>
+        </div>
+        <div class="box balance-box">
+            <h3>Balances</h3>
+            <p id="balance-csc"></p>
+        </div>
+        <div class="box submit-tx-box">
+            <h3>Send</h3>
+            <input type="text" id="address" placeholder="Destination Address">
+            <input type="number" id="destinationTag" placeholder="Destination Tag">
+            <input type="text" id="amount" placeholder="Amount">
+            <button id="submit-tx-btn">Submit Transaction</button>
+        </div>
+    </div>
 </div>
 <div id="tokens"></div>
 <div id="transactions"></div>
