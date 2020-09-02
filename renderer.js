@@ -1,72 +1,76 @@
 const {ipcRenderer} = require("electron");
 
 
-let mainHtml = "<h1>Connect your Ledger device<br>and open the CasinoCoin application ...</h1>";
-document.getElementById("main").innerHTML = mainHtml;
+function renderMainPage() {
 
-const balance = document.createElement("h4");
-const addresstag = document.createElement("h4");
-const address = document.createElement('input');
-const destinationTag = document.createElement('input');
-const amount = document.createElement('input');
-const submit = document.createElement('button');
+}
 
+const balance = document.getElementById("balance");
+const addressDisplay = document.getElementById("address-display");
+const address = document.getElementById('address');
+const destinationTag = document.getElementById('destinationTag');
+const amount = document.getElementById('amount');
+const submit = document.getElementById('submit-tx-btn');
+const main = document.getElementById('main');
+const entry = document.getElementById('entry');
+const tokens = document.getElementById('tokens');
+const transactions = document.getElementById('transactions');
+const entryAddress = document.getElementById('entry-address');
+const entryMsg = document.getElementById('entry-msg');
+const navWrapper = document.getElementById('nav-wrapper');
+let verified = false;
 ipcRenderer.on("casinocoinInfo", (event, arg) => {
-    console.log(arg);
+    console.log('ran');
     if (arg !== undefined && arg !== null) {
-        ipcRenderer.send("verifyBitcoinInfo");
+        entryAddress.innerHTML = arg.address;
+        entryMsg.innerHTML = 'Please verify the Address on your Ledger device to continue.';
+        ipcRenderer.send("verifyCSCAddress");
         // Get the modal
         const modal = document.getElementById("ledgerModal");
+        const failTxModal = document.getElementById("failTxModal");
+        const failTxModalClose = document.getElementsByClassName("close-tx")[0];
         // Get the <span> element that closes the modal
-        const span = document.getElementsByClassName("close")[0];
+        const span = document.getElementsByClassName("close-confirm")[0];
         // When the user clicks on <span> (x), close the modal
         span.onclick = function () {
             modal.style.display = "none";
         }
+        failTxModalClose.onclick = function () {
+            failTxModal.style.display = "none";
+        }
 
-        const h1 = document.createElement("h2");
-        h1.textContent = arg.address;
-
-        document.getElementById("main").innerHTML = "<h1>Ledger CasinoCoin address:</h1>";
-
-        addresstag.id = "addresss";
-        addresstag.textContent = arg.address;
-        document.getElementById("main").appendChild(addresstag);
-        balance.id = "balance";
+        addressDisplay.textContent = arg.address;
         balance.textContent = "Balance: 0 CSC";
-        document.getElementById("main").appendChild(balance);
-        document.getElementById("main").appendChild(document.createElement("br"));
-        document.getElementById("main").appendChild(document.createElement("br"));
-        address.type = 'text';
-        address.id = 'address';
-        address.placeholder = 'Destination Address';
-        document.getElementById("main").appendChild(address);
-        destinationTag.type = 'number';
-        destinationTag.id = 'destinationTag';
-        destinationTag.placeholder = 'Destination Tag';
-        document.getElementById("main").appendChild(destinationTag);
-        amount.type = 'text';
-        amount.id = 'amount';
-        amount.placeholder = 'Amount';
-        document.getElementById("main").appendChild(amount);
         submit.innerHTML = 'Submit Transaction';
         submit.onclick = function () {
             let address = document.getElementById('address').value;
             let destinationTag = document.getElementById('destinationTag').value;
             let amount = document.getElementById('amount').value;
-            document.getElementById('address').value = '';
-            document.getElementById('amount').value = '';
-            document.getElementById('destinationTag').value = '';
-            ipcRenderer.send("requestCasinoCoinSignTransaction", [address, destinationTag, amount]);
-            // show the modal
-            modal.style.display = "block";
+            if (!address || !amount) {
+                failTxModal.style.display = "block";
+            } else {
+                document.getElementById('address').value = '';
+                document.getElementById('amount').value = '';
+                document.getElementById('destinationTag').value = '';
+                ipcRenderer.send("requestCasinoCoinSignTransaction", [address, destinationTag, amount]);
+                // show the modal
+                modal.style.display = "block";
+            }
         };
         document.getElementById("main").appendChild(submit);
     }
 });
 
 ipcRenderer.on("updateBalance", (event, arg) => {
-    document.getElementById('balance').textContent = "Balance: " + arg + " CSC";
+    console.log(balance);
+    console.log(document);
+    balance.textContent = "Balance: " + arg + " CSC";
+});
+
+ipcRenderer.on("toggleEntryToMain", (event, arg) => {
+    entry.style.display = "none";
+    main.style.display = "flex";
+    navWrapper.style.display = "block";
 });
 
 ipcRenderer.on("disconnected", (event, arg) => {

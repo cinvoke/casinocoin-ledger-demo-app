@@ -27,6 +27,7 @@ class EventObserver {
         this.observers = [];
     }
     next(eventText) {
+        console.log('eventObserver');
         if (eventText.type === 'remove') {
             weblog('Device Disconnected.');
             if (mainWindow) {
@@ -72,11 +73,13 @@ function getCasinoCoinInfo(verify) {
                     .close()
                     .catch(e => {})
                     .then(() => {
-                        console.log(r);
-                        updateBalance(r);
-                        setInterval(function () {
+                        if (verify) {
+                            mainWindow.webContents.send("toggleEntryToMain", "0");
                             updateBalance(r);
-                        }, 15000);
+                            setInterval(function () {
+                                updateBalance(r);
+                            }, 15000);
+                        }
                         return r;
                     })
             );
@@ -93,7 +96,13 @@ function getCasinoCoinInfo(verify) {
 }
 
 function updateBalance(address) {
+    api.getBalances(address.address).then(info => {
+        console.log(info);
+    }).catch(e => {
+        mainWindow.webContents.send("updateBalance", "0");
+    });
     api.getAccountInfo(address.address).then(info => {
+        console.log(info);
         weblog('updateBalance - accountInfo: ' + JSON.stringify(info));
         mainWindow.webContents.send("updateBalance", info.cscBalance);
         if (transactionSubmitted === true) {
@@ -122,7 +131,7 @@ function getCasinoCoinSignTransaction(destination_address, destination_tag, amou
                 weblog('Amount: ' + amount);
                 weblog('Destination Tag: ' + destination_tag);
 
-                var source_address = address.address;
+                let source_address = address.address;
 
                 let payment = {
                     source: {
@@ -174,8 +183,8 @@ function getCasinoCoinSignTransaction(destination_address, destination_tag, amou
 }
 
 function redirectToExplorer(address) {
-    var explorer = new BrowserWindow({width: 800, height: 600});
-    var url = "https://explorer.casinocoin.org/address/" + address;
+    let explorer = new BrowserWindow({width: 800, height: 600});
+    let url = "https://explorer.casinocoin.org/address/" + address;
 
     explorer.loadURL(url);
     explorer.show();
@@ -199,7 +208,7 @@ function createWindow() {
 
     ipcMain.on("requestCasinoCoinInfo", () => {
         getCasinoCoinInfo(false).then(result => {
-            console.log(result);
+            console.log('request from main');
             mainWindow.webContents.send("casinocoinInfo", result);
         });
     });
@@ -212,7 +221,8 @@ function createWindow() {
         redirectToExplorer(arg);
     });
 
-    ipcMain.on("verifyBitcoinInfo", () => {
+    ipcMain.on("verifyCSCAddress", () => {
+        //pass in true to initiate the verify step on the ledger device.
         getCasinoCoinInfo(true);
     });
 }
