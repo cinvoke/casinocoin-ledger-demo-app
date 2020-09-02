@@ -5,6 +5,16 @@ function renderMainPage() {
 
 }
 
+// @toDo: not in order read all first
+//  1.  Hook menu items for clicks
+//  2.  Figure out on startup if tokens exist (getBalances)
+//  3.  On startup check if the account is not yet activated ^^^^
+//  4.  For the tx page use the getTransactions call
+//  5.  Check issue when app is closed during verify and re-opened
+//  6.  Configure sending of Tokens if they exist in the account and are turstset
+//  7.  TrustSet for Token page
+//
+
 const balance = document.getElementById("balance");
 const addressDisplay = document.getElementById("address-display");
 const address = document.getElementById('address');
