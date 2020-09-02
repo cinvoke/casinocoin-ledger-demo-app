@@ -221,7 +221,6 @@ function createWindow() {
 
     ipcMain.on("requestCasinoCoinInfo", () => {
         getAccount().then(result => {
-            console.log('request from main');
             mainWindow.webContents.send("casinocoinInfo", result);
         });
     });
@@ -235,9 +234,8 @@ function createWindow() {
     });
 
     ipcMain.on("verifyCSCAddress", () => {
-        //pass in true to initiate the verify step on the ledger device.
         verifyAccount().then(r => {
-            console.log(r);
+            console.log('DONE VERIFY');
         });
     });
 }

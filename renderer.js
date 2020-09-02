@@ -29,12 +29,12 @@ const transactions = document.getElementById('transactions');
 const entryAddress = document.getElementById('entry-address');
 const entryMsg = document.getElementById('entry-msg');
 const navWrapper = document.getElementById('nav-wrapper');
-const modal = document.getElementById("ledgerModal");
 const failTxModal = document.getElementById("failTxModal");
 const failTxModalClose = document.getElementsByClassName("close-tx")[0];
-const span = document.getElementsByClassName("close-confirm")[0];
+const modal = document.getElementById("ledgerModal");
+const ledgerModalClose = document.getElementsByClassName("close-confirm")[0];
 
-span.onclick = function () {
+ledgerModalClose.onclick = function () {
     modal.style.display = "none";
 }
 failTxModalClose.onclick = function () {
@@ -53,19 +53,19 @@ function setMainScreen(address) {
 }
 
 ipcRenderer.on("casinocoinInfo", (event, arg) => {
-    console.log('ran');
     if (arg !== undefined && arg !== null) {
         //send off the verify address request to the ledger
         console.log('-called-');
         ipcRenderer.send("verifyCSCAddress");
         //set the entry screen (user verifies the address displayed on their device to arg.address)
         setEntryScreen(arg.address);
+        //set the main screen now too
         setMainScreen(arg.address);
 
         submit.onclick = function () {
-            let addressHold = document.getElementById('address').value;
-            let destinationTagHold = document.getElementById('destinationTag').value;
-            let amountHold = document.getElementById('amount').value;
+            let addressHold = address.value;
+            let destinationTagHold = destinationTag.value;
+            let amountHold = amount.value;
             if (!addressHold || !amountHold) {
                 failTxModal.style.display = "block";
             } else {
@@ -77,13 +77,10 @@ ipcRenderer.on("casinocoinInfo", (event, arg) => {
                 modal.style.display = "block";
             }
         };
-        document.getElementById("main").appendChild(submit);
     }
 });
 
 ipcRenderer.on("updateBalance", (event, arg) => {
-    console.log(balance);
-    console.log(document);
     balance.textContent = "Balance: " + arg + " CSC";
 });
 
