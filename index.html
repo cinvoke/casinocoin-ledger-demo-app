@@ -144,6 +144,9 @@
         .margin-right {
             margin-right: 10px;
         }
+        .skeleton {
+            visibility: hidden;
+        }
     </style>
 </head>
 <body>
@@ -177,7 +180,17 @@
         </div>
     </div>
 </div>
-<div id="tokens"></div>
+<div id="tokens">
+    <div id="token-list">
+        <div id="token" class="skeleton">
+            <div class="name"></div>
+            <div class="ticker"></div>
+            <div class="supply"></div>
+            <div class="website"></div>
+            <div class="icon"></div>
+        </div>
+    </div>
+</div>
 <div id="transactions"></div>
 <div id="message"></div>
 <!-- Ledger Action Modal -->

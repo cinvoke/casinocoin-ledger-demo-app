@@ -51,12 +51,15 @@ TransportNodeHid.listen(observer);
 let api = new CasinocoinAPI({
     server: csc_server
 });
-
 api.connect().then(() => {
     weblog('CasinoCoin Connected');
     mainWindow.webContents.send("message", "CasinoCoin Network Connected");
     api.getServerInfo().then(info => {
         feeCSC = info.validatedLedger.baseFeeCSC;
+    });
+    api.getConfigInfo('Token').then(configInfo => {
+        let tokens = JSON.parse(JSON.stringify(configInfo));
+        mainWindow.webContents.send("tokens", tokens);
     });
 }).catch(e => weblog('Error: ' + e));
 
@@ -109,7 +112,7 @@ function verifyAccount() {
 
 function updateBalance(address) {
     api.getBalances(address.address).then(info => {
-        //console.log(info);
+        console.log(info);
     }).catch(e => {
         mainWindow.webContents.send("updateBalance", "0");
     });

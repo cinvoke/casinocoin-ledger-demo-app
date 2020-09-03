@@ -35,6 +35,7 @@ const ledgerModalClose = document.getElementsByClassName("close-confirm")[0];
 const navMain = document.getElementById('nav-main');
 const navToken = document.getElementById('nav-tokens');
 const navTransactions = document.getElementById('nav-transactions');
+const tokenList = document.getElementById('token-list');
 
 //nav click functions
 navMain.onclick = function() {
@@ -131,6 +132,11 @@ ipcRenderer.on("message", (event, arg) => {
     document.getElementById("message").innerHTML = "<p>Last Message: " + arg + "</p>";
 });
 
+ipcRenderer.on("tokens", (event, arg) => {
+    buildTokenList(arg);
+    console.log(arg);
+});
+
 ipcRenderer.on("log", (event, arg) => {
     console.log(event, arg);
 });
@@ -141,3 +147,17 @@ ipcRenderer.on("closeModal", (event, arg) => {
 });
 
 ipcRenderer.send("requestCasinoCoinInfo");
+
+
+function buildTokenList(tokens) {
+    for (let i = 0; i < tokens.length; i++) {
+        let ele = document.getElementById('token').cloneNode(true);
+        ele.classList.remove('skeleton');
+        ele.children[0].innerText =  tokens[i].ConfigData.FullName;
+        ele.children[1].innerText = tokens[i].ConfigData.Token;
+        ele.children[2].innerText = tokens[i].ConfigData.TotalSupply;
+        ele.children[3].innerText = tokens[i].ConfigData.Website;
+        ele.children[4].innerText = tokens[i].ConfigData.IconURL;
+        tokenList.appendChild(ele);
+    }
+}
