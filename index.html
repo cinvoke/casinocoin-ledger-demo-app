@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <title>CasinoCoin Ledger Demo Application</title>
+    <link href="https://cdn.jsdelivr.net/npm/simple-datatables@latest/dist/style.css" rel="stylesheet" type="text/css">
     <style>
         body {
             margin: 0;
@@ -17,6 +18,11 @@
             padding: 0 50px;
         }
         #message {
+            position: fixed;
+            bottom: 0;
+            width: 100%;
+            background: #eee;
+            font-size: 12px;
             font-family: sans-serif;
             display: flex;
             flex-direction: column;
@@ -56,6 +62,10 @@
 
         button:hover {
             background-color: #da3737;
+        }
+
+        .text-center {
+            text-align: center;
         }
 
         /* The Modal (background) */
@@ -145,7 +155,40 @@
             margin-right: 10px;
         }
         .skeleton {
-            visibility: hidden;
+            display: none;
+        }
+        #entry {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-flow: wrap;
+            height: 100vh;
+        }
+        .entry-wrap {
+
+        }
+        #entry-msg, #entry-address {
+            width: 100%;
+            height: auto;
+        }
+        #token-list {
+            padding: 25px 50px 50px 50px;
+            display: flex;
+        }
+        #token-list .token:not(.skeleton) {
+            background: #eee;
+            margin-bottom: 5px;
+            margin-right: 10px;
+            border-radius: 10px;
+            padding: 10px;
+            width: 25%;
+            text-align: center;
+        }
+        .icon-img {
+            width: 80px;
+        }
+        .supply, .website {
+            display: none;
         }
     </style>
 </head>
@@ -158,8 +201,10 @@
     </div>
 </div>
 <div id="entry">
-    <h1 id="entry-msg">Connect your Ledger device<br>and open the CasinoCoin application ...</h1>
-    <h4 id="entry-address"></h4>
+    <div class="entry-wrap">
+        <h1 id="entry-msg">Connect your Ledger device<br>and open the CasinoCoin application ...</h1>
+        <h4 id="entry-address"></h4>
+    </div>
 </div>
 <div id="main">
     <div class="boxes">
@@ -181,17 +226,31 @@
     </div>
 </div>
 <div id="tokens">
+    <h3 class="text-center">Each token activated costs 1 CSC towards your account reserve</h3>
+    <p class="text-center" id="balance-csc-tokens"></p>
     <div id="token-list">
-        <div id="token" class="skeleton">
+        <div id="token" class="skeleton token">
             <div class="name"></div>
             <div class="ticker"></div>
             <div class="supply"></div>
             <div class="website"></div>
-            <div class="icon"></div>
+            <div class="icon">
+                <img src="" class="icon-img" />
+            </div>
+            <div class="activated">
+                Activated
+                <input type="checkbox" />
+            </div>
         </div>
     </div>
+    <button id="do-activate" class="activate-btn">Activate Selected Tokens</button>
 </div>
-<div id="transactions"></div>
+<div id="transactions">
+    <div class="tx-wrap">
+        <table id="history-table" class="history-table">
+        </table>
+    </div>
+</div>
 <div id="message"></div>
 <!-- Ledger Action Modal -->
 <div id="ledgerModal" class="modal">

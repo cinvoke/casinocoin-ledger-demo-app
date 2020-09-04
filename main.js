@@ -52,7 +52,6 @@ let api = new CasinocoinAPI({
     server: csc_server
 });
 api.connect().then(() => {
-    weblog('CasinoCoin Connected');
     mainWindow.webContents.send("message", "CasinoCoin Network Connected");
     api.getServerInfo().then(info => {
         feeCSC = info.validatedLedger.baseFeeCSC;
@@ -95,6 +94,7 @@ function verifyAccount() {
                     .then(() => {
                             mainWindow.webContents.send("toggleEntryToMain", "0");
                             updateBalance(r);
+                            getTxHistory(r);
                             setInterval(function () {
                                 updateBalance(r);
                             }, 5000);
@@ -110,11 +110,19 @@ function verifyAccount() {
         });
 }
 
-function updateBalance(address) {
-    api.getBalances(address.address).then(info => {
-        console.log(info);
+function getTxHistory(address) {
+    api.getTransactions(address.address).then(txs => {
+        mainWindow.webContents.send("txHistory", txs);
     }).catch(e => {
-        mainWindow.webContents.send("updateBalance", "0");
+        console.log(e);
+    });
+}
+
+function updateBalance(address) {
+    api.getBalances(address.address).then(balances => {
+        mainWindow.webContents.send("userBalances", balances);
+    }).catch(e => {
+        console.log(e);
     });
     api.getAccountInfo(address.address).then(info => {
         //console.log(info);
@@ -127,6 +135,52 @@ function updateBalance(address) {
         }
     }).catch(e => {
         mainWindow.webContents.send("updateBalance", "0");
+    });
+}
+
+function activateTokenForAccount(token, counterparty, supply) {
+    TransportNodeHid.open("").then(transport => {
+        const csc = new CSC(transport);
+        csc.getAddress("44'/144'/0'/0/0").then(address => {
+            let source_address = address.address;
+            let trustLine = {
+                currency: token,
+                counterparty: counterparty,
+                limit: supply
+            }
+            console.log(trustLine);
+
+            const instructions = {
+                maxLedgerVersionOffset: 3,
+                fee: feeCSC
+            };
+
+            api.prepareTrustline(source_address, trustLine, instructions).then(prepared => {
+                console.log(prepared);
+                const json = JSON.parse(prepared.txJSON);
+                json.SigningPubKey = address.publicKey.toUpperCase();
+                const rawTx = binary.encode(json);
+                let txJSON = binary.decode(rawTx);
+                csc.signTransaction("44'/144'/0'/0/0", rawTx).then(sign => {
+                    txJSON.TxnSignature = sign.toUpperCase();
+                    const txHEX = binary.encode(txJSON);
+                    console.log(sign);
+                    api.submit(txHEX).then(info => {
+                        weblog('Submit Result: ' + JSON.stringify(info));
+                        if (info.resultCode == 'tesSUCCESS') {
+                            // wait to set transactionSubmitted so the ledger will be validated
+                            setTimeout(function () {
+                                transactionSubmitted = true;
+                            }, 3000);
+                        }
+                        // return api.disconnect();
+                    }).catch(e => weblog('Submit Error: ' + e));
+
+                }).catch(e => {
+                    console.log('sign error: ' + e);
+                });
+            }).catch(e => weblog('Prepare Error: ' + e));
+        });
     });
 }
 
@@ -237,6 +291,13 @@ function createWindow() {
         verifyAccount().then(r => {
             console.log('DONE VERIFY');
         });
+    });
+
+    ipcMain.on("activateTokens", (event, arg) => {
+        let needsActivating = arg[0];
+        let tokens = arg[1];
+        activateTokenForAccount(needsActivating[0], tokens[needsActivating[0]].Issuer, tokens[needsActivating[0]].TotalSupply);
+        console.log(arg);
     });
 }
 //when the app is ready call the initial createWindow method.

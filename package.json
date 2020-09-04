@@ -51,7 +51,8 @@
     "@casinocoin/libjs": "^2.0.14",
     "@ledgerhq/hw-transport-node-hid": "^5.8.0",
     "babel-polyfill": "^6.26.0",
-    "jsonschema": "^1.2.2"
+    "jsonschema": "^1.2.2",
+    "simple-datatables": "^2.1.13"
   },
   "resolutions": {
     "jsonschema": "1.2.2"
