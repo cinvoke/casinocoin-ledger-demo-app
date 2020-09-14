@@ -47,13 +47,15 @@ navMain.onclick = function() {
     navToken.classList.remove('active');
     navTransactions.classList.remove('active');
 }
+//@toDo: TOKENSUPPORT uncomment
 navToken.onclick = function () {
-    main.style.display = "none";
-    transactions.style.display = "none";
-    tokens.style.display = "block";
-    this.classList.add('active');
-    navMain.classList.remove('active');
-    navTransactions.classList.remove('active');
+    // main.style.display = "none";
+    // transactions.style.display = "none";
+    // tokens.style.display = "block";
+    // this.classList.add('active');
+    // navMain.classList.remove('active');
+    // navTransactions.classList.remove('active');
+    console.log('not active');
 }
 navTransactions.onclick = function() {
     main.style.display = "none";
@@ -221,6 +223,8 @@ function buildTokenList(tokens) {
 
 function buildHistoryTable(transactions) {
     let formattedData = [];
+    dataTable.destroy();
+    dataTable.init(myTable);
     for (let i = 0; i < transactions.length; i++) {
         console.log(transactions[i]['outcome'].ledgerVersion);
         //don't ask
@@ -239,5 +243,6 @@ function buildHistoryTable(transactions) {
         headings: ["Ledger", "Type", "Sender", "Receiver", "Amount", "Currency"],
         data: formattedData
     };
+
     dataTable.insert(newData);
 }

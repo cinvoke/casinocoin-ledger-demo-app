@@ -1,14 +1,15 @@
 require("babel-polyfill");
 const TransportNodeHid = require("@ledgerhq/hw-transport-node-hid").default;
-const CSC = require("@casinocoin/ledger").default;
-const {listen} = require("@ledgerhq/logs");
+//const CSC = require("@casinocoin/ledger").default;
+const CSC = require('../libjs/dist/@casinocoin/ledger').default;
+const { listen } = require("@ledgerhq/logs");
 
-var binary = require('casinocoin-libjs-binary-codec');
-var CasinocoinAPI = require('@casinocoin/libjs').CasinocoinAPI;
-var csc_server = "wss://ws01.casinocoin.org:4443";
-var feeCSC = '';
+const binary = require('casinocoin-libjs-binary-codec');
+const CasinocoinAPI = require('@casinocoin/libjs').CasinocoinAPI;
+const csc_server = "wss://ws01.casinocoin.org:4443";
+let feeCSC = '';
 
-var transactionSubmitted = false;
+let transactionSubmitted = false;
 
 // Keep a global reference of the window object, if you don't, the window will
 // be closed automatically when the JavaScript object is garbage collected.
@@ -97,6 +98,7 @@ function verifyAccount() {
                             getTxHistory(r);
                             setInterval(function () {
                                 updateBalance(r);
+                                getTxHistory(r);
                             }, 5000);
                         return r;
                     })
@@ -125,7 +127,6 @@ function updateBalance(address) {
         console.log(e);
     });
     api.getAccountInfo(address.address).then(info => {
-        //console.log(info);
         //weblog('updateBalance - accountInfo: ' + JSON.stringify(info));
         mainWindow.webContents.send("updateBalance", info.cscBalance);
         if (transactionSubmitted === true) {
@@ -138,6 +139,7 @@ function updateBalance(address) {
     });
 }
 
+//@toDo: TOKENSUPPORT this does not work with existing hardware code
 function activateTokenForAccount(token, counterparty, supply) {
     TransportNodeHid.open("").then(transport => {
         const csc = new CSC(transport);
@@ -161,6 +163,7 @@ function activateTokenForAccount(token, counterparty, supply) {
                 json.SigningPubKey = address.publicKey.toUpperCase();
                 const rawTx = binary.encode(json);
                 let txJSON = binary.decode(rawTx);
+                console.log(rawTx);
                 csc.signTransaction("44'/144'/0'/0/0", rawTx).then(sign => {
                     txJSON.TxnSignature = sign.toUpperCase();
                     const txHEX = binary.encode(txJSON);
@@ -225,11 +228,12 @@ function getCasinoCoinSignTransaction(destination_address, destination_tag, amou
                 weblog('Prepare Payment: ' + payment);
 
                 api.preparePayment(source_address, payment, instructions).then(prepared => {
+                    console.log(prepared);
                     const json = JSON.parse(prepared.txJSON);
                     json.SigningPubKey = address.publicKey.toUpperCase();
                     const rawTx = binary.encode(json);
                     let txJSON = binary.decode(rawTx);
-
+                    console.log(rawTx);
                     csc.signTransaction("44'/144'/0'/0/0", rawTx).then(sign => {
                         txJSON.TxnSignature = sign.toUpperCase();
                         const txHEX = binary.encode(txJSON);
@@ -297,7 +301,6 @@ function createWindow() {
         let needsActivating = arg[0];
         let tokens = arg[1];
         activateTokenForAccount(needsActivating[0], tokens[needsActivating[0]].Issuer, tokens[needsActivating[0]].TotalSupply);
-        console.log(arg);
     });
 }
 //when the app is ready call the initial createWindow method.

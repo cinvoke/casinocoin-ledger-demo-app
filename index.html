@@ -116,7 +116,7 @@
         .menu-item {
             min-width: 55px;
          }
-        .menu-item:hover {
+        .menu-item:not(.nh):hover {
             cursor: pointer;
             font-weight: bold;
         }
@@ -190,13 +190,18 @@
         .supply, .website {
             display: none;
         }
+        .small-warning {
+            font-size: 8px;
+            display: block;
+        }
     </style>
 </head>
 <body>
 <div class="nav-wrapper" id="nav-wrapper">
     <div class="menu">
         <div class="menu-item active" id="nav-main">Main</div>
-        <div class="menu-item" id="nav-tokens">Tokens</div>
+        <!-- TOKENSUPPORT remove nh class and warning -->
+        <div class="menu-item nh" id="nav-tokens">Tokens <i class="small-warning">(Coming Soon!)</i></div>
         <div class="menu-item" id="nav-transactions">History</div>
     </div>
 </div>
