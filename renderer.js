@@ -49,12 +49,12 @@ navMain.onclick = function() {
 }
 //@toDo: TOKENSUPPORT uncomment
 navToken.onclick = function () {
-    // main.style.display = "none";
-    // transactions.style.display = "none";
-    // tokens.style.display = "block";
-    // this.classList.add('active');
-    // navMain.classList.remove('active');
-    // navTransactions.classList.remove('active');
+    main.style.display = "none";
+    transactions.style.display = "none";
+    tokens.style.display = "block";
+    this.classList.add('active');
+    navMain.classList.remove('active');
+    navTransactions.classList.remove('active');
     console.log('not active');
 }
 navTransactions.onclick = function() {
@@ -226,7 +226,6 @@ function buildHistoryTable(transactions) {
     dataTable.destroy();
     dataTable.init(myTable);
     for (let i = 0; i < transactions.length; i++) {
-        console.log(transactions[i]['outcome'].ledgerVersion);
         //don't ask
         transactions[i]['outcome'].ledgerVersion = transactions[i]['outcome'].ledgerVersion.toString()
         let newRow = [

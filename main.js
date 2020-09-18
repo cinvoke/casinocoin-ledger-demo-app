@@ -65,23 +65,27 @@ api.connect().then(() => {
 
 const {app, BrowserWindow, ipcMain} = require("electron");
 
+//get the account from the connected device and return it.
 function getAccount() {
     return TransportNodeHid.open("")
         .then(transport => {
             const csc = new CSC(transport);
             weblog('### Get Address from ledger');
-            return csc.getAddress("44'/144'/0'/0/0").then(r =>
-                transport.close().catch(e => {})
-                    .then(() => {
-                        return r;
-                    })
+            return csc.getAddress("44'/144'/0'/0/0").then(response =>
+                //close the connection and return the account
+                transport.close().catch(error => {
+                    //@toDo: do something with the error here, i.e device could have disconnected
+                }).then(() => {
+                    return response;
+                })
             );
-        }).catch(e => {
+        }).catch(error => {
             //@toDo: maybe try again here?
-            weblog('getCasinoCoinInfo error: ' + e);
+            weblog('getCasinoCoinInfo Error: ' + error);
         });
 }
 
+//ask the user to verify the account (physically on the device) before entering the app
 function verifyAccount() {
     return TransportNodeHid.open("")
         .then(transport => {
@@ -156,7 +160,7 @@ function activateTokenForAccount(token, counterparty, supply) {
                 maxLedgerVersionOffset: 3,
                 fee: feeCSC
             };
-
+            console.log(api);
             api.prepareTrustline(source_address, trustLine, instructions).then(prepared => {
                 console.log(prepared);
                 const json = JSON.parse(prepared.txJSON);
